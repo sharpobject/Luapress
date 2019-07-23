@@ -202,32 +202,44 @@ local function _process_content(s, item)
     -- Hande plugins
     s = _process_plugins(s, item)
 
-    -- Excerpt
-    local start, _ = s:find('%-%-MORE%-%-', 1)
-
-    if start then
-        -- Extract the excerpt
-        item.excerpt = markdown(s:sub(0, start - 1))
-        -- Replace the --MORE--
-        local sep = config.more_separator or ''
-        s = s:gsub('%-%-MORE%-%-', '<a id="more">' .. sep .. '</a>')
-    end
-
     -- Swap in any $=toc - we *ignore* the HTML at this stage
     _, toc = markdown(s)
     if toc then
         s = s:gsub('%$=toc', toc)
     end
 
+    -- Excerpt
+    local start, endd = s:find('%-%-MORE%-%-', 1)
+    local sep = config.more_separator or ''
+    local parts = {}
+
+    if start then
+        -- Extract the excerpt
+        item.excerpt = markdown(s:sub(0, start - 1))
+        parts[1] = s:sub(0, start-1)
+        parts[2] = sep
+        parts[3] = s:sub(endd+1)
+    else
+        parts[1] = s
+    end
+
     -- Now we've processed internal extras, restore $raw$ blocks
     local counter = 0
-    for block in s:gmatch('%$raw%$') do
-        s = s:gsub('%$raw%$', blocks[counter], counter + 1)
-        counter = counter + 1
+    for i=1, #parts, 2 do
+        local str = parts[i]
+        for block in str:gmatch('%$raw%$') do
+            str = str:gsub('%$raw%$', blocks[counter], counter + 1)
+            counter = counter + 1
+        end
+        parts[i] = str
     end
 
     -- Now we've done the internal extras, actually markdown it!
-    s, _ = markdown(s)
+    for i=1, #parts, 2 do
+        parts[i] = markdown(parts[i])
+    end
+
+    s = table.concat(parts)
 
     item.content = s
     item.toc = toc
