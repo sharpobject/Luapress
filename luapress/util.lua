@@ -305,7 +305,7 @@ local function load_markdowns(directory, template, get_item_permalink)
 
             -- Date set?
             if item.date then
-                local _, _, d, m, y = item.date:find('(%d+)%/(%d+)%/(%d+)')
+                local _, _, y, m, d = item.date:find('(%d+)%/(%d+)%/(%d+)')
                 item.time = os.time({day = d, month = m, year = y})
             end
 
