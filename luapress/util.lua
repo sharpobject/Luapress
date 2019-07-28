@@ -171,6 +171,11 @@ local function _process_plugins(s, out)
 end
 
 
+local function literalize(s)
+    return s:gsub("[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%0")
+end
+
+
 local function _process_content(s, item)
     blocks = {}
 
@@ -193,7 +198,7 @@ local function _process_content(s, item)
             break
         end
         item[k] = v
-        s = s:gsub(line .. '\n', '')
+        s = s:gsub(literalize(line) .. '\n', '')
     end
 
     -- Swap out XREFs
