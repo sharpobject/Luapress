@@ -123,10 +123,10 @@ local function build_index(pages, posts, templates)
                     template:set('previous_page', 'index' .. index - 1 .. '.html')
                 end
                 -- Ensure this is false
-                template:set('home', false)
+                template:unset('home')
             else
                 -- We are page 1!
-                template:set('previous_page', false)
+                template:unset('previous_page')
                 -- Useful!
                 template:set('home', true)
             end
@@ -134,7 +134,7 @@ local function build_index(pages, posts, templates)
             if #posts > k then
                 template:set('next_page', 'index' .. index + 1 .. '.html')
             else
-                template:set('next_page', false)
+                template:unset('next_page')
             end
 
             -- Create and write output
@@ -258,13 +258,13 @@ local function build()
         if posts[k-1] then
             template:set('next_post', config.posts_dir .. '/' .. posts[k-1].link)
         else
-            template:set('next_post', false)
+            template:unset('next_post')
         end
         -- Work out previous post
         if posts[k+1] then
             template:set('previous_post', config.posts_dir .. '/' .. posts[k+1].link)
         else
-            template:set('previous_post', false)
+            template:unset('previous_post')
         end
         -- Attach the post & output the file
         local post = posts[k]
@@ -272,10 +272,12 @@ local function build()
         local dest_file = util.ensure_destination(post)
         util.write_html(dest_file, post, templates)
     end
+    template:unset('next_post')
+    template:unset('post')
 
     -- Build the pages
     print('[5] Building pages')
-    template:set('single', false)
+    template:unset('single')
 
     for _, page in ipairs(pages) do
         local dest_file = util.ensure_destination(page)
@@ -287,7 +289,7 @@ local function build()
         -- Output the file
         util.write_html(dest_file, page, templates)
     end
-    template:set('page', false)
+    template:unset('page')
 
     -- Build the indexes
     print('[6] Building index pages')

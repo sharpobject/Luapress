@@ -16,6 +16,11 @@ local template = {
     data = {}
 }
 
+-- Delete from data
+function template:unset(key)
+    self.data[key] = nil
+end
+
 -- Add to data
 function template:set(key, value)
     self.data[key] = value
