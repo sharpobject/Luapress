@@ -98,6 +98,7 @@ end
 -- Returns the destination file given our config
 local function ensure_destination(item)
     if config.link_dirs then
+        lfs.mkdir(config.root .. '/' .. config.build_dir .. '/' .. item.directory)
         lfs.mkdir(config.root .. '/' .. config.build_dir .. '/' .. item.directory .. '/' .. item.link)
         return config.build_dir .. '/' .. item.directory .. '/' .. item.link .. '/index.html'
     end
@@ -211,6 +212,9 @@ local function _process_content(s, item)
             break
         end
         item[k] = v
+        if k == "blog" then
+            item.directory = v
+        end
         s = s:gsub(literalize(line) .. '\n', '')
     end
 

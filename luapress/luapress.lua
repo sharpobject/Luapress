@@ -221,7 +221,6 @@ local function build()
     -- Build the archive page (all posts) if at least one post exists
     if #posts > 0 then
         template:set('posts', posts)
-        template:set('page', {title = config.archive_title})
         local archive_page = {
             title = config.archive_title,
             time = os.time(),
@@ -236,6 +235,20 @@ local function build()
         end
         archive_page.link = link
         table.insert(pages, archive_page)
+        local blarchive_page = {
+            title = "Blog "..config.archive_title,
+            time = os.time(),
+            content = template:process(templates.blarchive),
+            template = 'page',
+            directory = config.pages_dir,
+            name = 'blog archive',
+        }
+        local link = config.get_page_permalink(blarchive_page)
+        if not config.link_dirs then
+            link = link .. '.html'
+        end
+        blarchive_page.link = link
+        table.insert(pages, blarchive_page)
     end
 
     -- Process cross references
@@ -250,32 +263,47 @@ local function build()
     -- Page links shared between all posts
     template:set('page_links', util.page_links(pages, nil))
 
-    if #posts > 0 then
-        template:set('first_post', config.posts_dir .. '/' ..  posts[#posts].link)
-        template:set('last_post', config.posts_dir .. '/' ..  posts[1].link)
+    local blogs = {}
+    for _,post in ipairs(posts) do
+        local blog = post.blog or "default"
+        if not blogs[blog] then
+            blogs[blog] = {}
+        end
+        table.insert(blogs[blog], post)
     end
 
-    for k=1,#posts do
-        -- Work out next post
-        if posts[k-1] then
-            template:set('next_post', config.posts_dir .. '/' .. posts[k-1].link)
-        else
-            template:unset('next_post')
+    for blog,posts in pairs(blogs) do
+        local posts_dir = blog
+        if blog == "default" then
+            posts_dir = config.posts_dir
         end
-        -- Work out previous post
-        if posts[k+1] then
-            template:set('previous_post', config.posts_dir .. '/' .. posts[k+1].link)
-        else
-            template:unset('previous_post')
+        if #posts > 0 then
+            template:set('first_post', posts_dir .. '/' ..  posts[#posts].link)
+            template:set('last_post', posts_dir .. '/' ..  posts[1].link)
         end
-        -- Attach the post & output the file
-        local post = posts[k]
-        template:set('post', post)
-        local dest_file = util.ensure_destination(post)
-        util.write_html(dest_file, post, templates)
+
+        for k=1,#posts do
+            -- Work out next post
+            if posts[k-1] then
+                template:set('next_post', posts_dir .. '/' .. posts[k-1].link)
+            else
+                template:unset('next_post')
+            end
+            -- Work out previous post
+            if posts[k+1] then
+                template:set('previous_post', posts_dir .. '/' .. posts[k+1].link)
+            else
+                template:unset('previous_post')
+            end
+            -- Attach the post & output the file
+            local post = posts[k]
+            template:set('post', post)
+            local dest_file = util.ensure_destination(post)
+            util.write_html(dest_file, post, templates)
+        end
+        template:unset('next_post')
+        template:unset('post')
     end
-    template:unset('next_post')
-    template:unset('post')
 
     -- Build the pages
     print('[5] Building pages')
