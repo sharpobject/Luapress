@@ -60,7 +60,14 @@ local function build_index(pages, posts, templates)
 
             util.copy_file(filename, bdir .. 'index.html')
         elseif config.index_latest_post then
-            index_page = posts[1]
+            local index_page
+            for _,post in ipairs(posts) do
+                if post.blog ~= "blog" then
+                    index_page = post
+                    break
+                end
+            end
+            for k,v in pairs(index_page) do print(k,v) end
             local bdir = config.root .. '/' .. config.build_dir .. '/'
             local filename = bdir .. config.posts_dir .. '/' .. index_page.link
             if config.link_dirs then
